@@ -1,0 +1,6 @@
+FileName, CommitSha
+hunts/04-credential-dumping-tools.bicep,9cbe7c6039ef202e3d97d599d78988f0d9e88351
+hunts/03-browser-credential-access.bicep,df09e1176875043105de5e091ed78d7b13bffcb1
+hunts/02-registry-hive-dumping.bicep,a0e5fc31a92e2e41228549a13d429f9f8eb6681f
+hunts/01-lsass-credential-dumping.bicep,df9c5ece051854a0c8337564157052b8279d0c68
+

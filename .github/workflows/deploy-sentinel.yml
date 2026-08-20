@@ -2,12 +2,13 @@ name: Deploy Microsoft Sentinel content
 
 on:
   workflow_dispatch:
+
   push:
     branches:
       - main
     paths:
-      - "infra/**"
-      - "hunts/**"
+      - "hunts/**/*.bicep"
+      - ".github/workflows/deploy-sentinel.yml"
 
 permissions:
   id-token: write
@@ -19,7 +20,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Sign in to Azure using GitHub OIDC
         uses: azure/login@v3
@@ -28,17 +29,33 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Validate Bicep
+      - name: Validate hunting-query Bicep templates
+        shell: bash
         run: |
-          az deployment group validate \
-            --resource-group "${{ vars.SENTINEL_RESOURCE_GROUP }}" \
-            --template-file infra/main.bicep \
-            --parameters workspaceName="${{ vars.SENTINEL_WORKSPACE_NAME }}"
+          set -euo pipefail
 
-      - name: Deploy Sentinel content
+          for template in hunts/*.bicep; do
+            echo "Validating $template"
+
+            az deployment group validate \
+              --resource-group "${{ vars.SENTINEL_RESOURCE_GROUP }}" \
+              --template-file "$template" \
+              --parameters workspace="${{ vars.SENTINEL_WORKSPACE_NAME }}"
+          done
+
+      - name: Deploy hunting queries
+        shell: bash
         run: |
-          az deployment group create \
-            --name "sentinel-${{ github.run_number }}" \
-            --resource-group "${{ vars.SENTINEL_RESOURCE_GROUP }}" \
-            --template-file infra/main.bicep \
-            --parameters workspaceName="${{ vars.SENTINEL_WORKSPACE_NAME }}"
+          set -euo pipefail
+
+          for template in hunts/*.bicep; do
+            template_name="$(basename "$template" .bicep)"
+
+            echo "Deploying $template_name"
+
+            az deployment group create \
+              --name "hunt-${template_name}-${{ github.run_number }}" \
+              --resource-group "${{ vars.SENTINEL_RESOURCE_GROUP }}" \
+              --template-file "$template" \
+              --parameters workspace="${{ vars.SENTINEL_WORKSPACE_NAME }}"
+          done

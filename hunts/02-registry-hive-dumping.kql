@@ -1,8 +1,0 @@
-// Hunt: SAM/SECURITY/SYSTEM Registry Hive Dumping
-// Tactic: Credential Access | Technique: T1003.002
-DeviceProcessEvents
-| where FileName in~ ("reg.exe")
-| where ProcessCommandLine has "save"
-| where ProcessCommandLine has_any ("HKLM\\SAM", "HKLM\\SECURITY", "HKLM\\SYSTEM")
-| project TimeGenerated, DeviceName, AccountName, ProcessCommandLine, InitiatingProcessFileName, InitiatingProcessAccountName, FolderPath
-| order by TimeGenerated desc

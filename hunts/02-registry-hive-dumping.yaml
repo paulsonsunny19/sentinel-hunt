@@ -1,0 +1,25 @@
+id: a1b2c3d4-0002-4444-8888-000000000002
+name: SAM/SECURITY/SYSTEM Registry Hive Dumping
+description: |
+  Detects use of reg.exe to save the SAM, SECURITY, or SYSTEM registry hives,
+  a common technique for offline extraction of local credential material.
+severity: Medium
+requiredDataConnectors:
+  - connectorId: MicrosoftThreatProtection
+    dataTypes:
+      - DeviceProcessEvents
+queryFrequency: 1h
+queryPeriod: 1h
+triggerOperator: gt
+triggerThreshold: 0
+tactics:
+  - CredentialAccess
+relevantTechniques:
+  - T1003.002
+query: |
+  DeviceProcessEvents
+  | where FileName in~ ("reg.exe")
+  | where ProcessCommandLine has "save"
+  | where ProcessCommandLine has_any ("HKLM\\SAM", "HKLM\\SECURITY", "HKLM\\SYSTEM")
+  | project TimeGenerated, DeviceName, AccountName, ProcessCommandLine, InitiatingProcessFileName, InitiatingProcessAccountName, FolderPath
+  | order by TimeGenerated desc
